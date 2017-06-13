@@ -91,7 +91,6 @@ case class EqualTo[A: Numeric](num: A) extends Bounds
 
 object EqualTo {
 
-  //def conforms(d: , b: EqualTo) = (d == b.num).validatedNel((), s"$d is not equal to ${b.num}")
   def conforms[A](i: A, b: EqualTo[A])(implicit ev: Numeric[A]) = {
     (ev.equiv(i, b.num)).validatedNel((), s"$i is not equal to ${b.num}")
   }
