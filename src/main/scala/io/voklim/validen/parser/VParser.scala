@@ -77,25 +77,35 @@ private[parser] class VParser extends JavaTokenParsers {
   private[parser] def matchBoundsDouble : Parser[Bounds] = {
     "=" ~ floatingPointNumber ^^
       {
-        case _ ~ i => EqualTo(i.toInt)
+        case _ ~ i => Eq(i.toInt)
       } |
     upperBoundEquality ~ floatingPointNumber ~ lowerBoundEquality ~ floatingPointNumber ^^
       {
         case upperEq ~ upperS ~ lowerEq ~ lowerS =>
-          createGreaterThanLessThanBounds(lowerS.toDouble, lowerEq, upperS.toDouble, upperEq)
+          createBetweenBound(
+            lowerS.toDouble,
+            tag[InequalityTag][String](lowerEq),
+            upperS.toDouble,
+            tag[InequalityTag][String](upperEq)
+          )
       } |
     lowerBoundEquality ~ floatingPointNumber ~ upperBoundEquality ~ floatingPointNumber ^^
       {
         case lowerEq ~ lowerS ~ upperEq ~ upperS =>
-          createGreaterThanLessThanBounds(lowerS.toDouble, lowerEq, upperS.toDouble, upperEq)
+          createBetweenBound(
+            lowerS.toDouble,
+            tag[InequalityTag][String](lowerEq),
+            upperS.toDouble,
+            tag[InequalityTag][String](upperEq)
+          )
       } |
     upperBoundEquality ~ floatingPointNumber ^^
       {
-        case upper ~ upperS => LessThan(upperS.toDouble, (isInclusiveBound(tag[InequalityTag][String](upper))))
+        case upperEq ~ upperS => createUpperBound(tag[InequalityTag][String](upperEq), upperS.toDouble)
       } |
     lowerBoundEquality ~ floatingPointNumber ^^
       {
-        case lower ~ lowerS => GreaterThan(lowerS.toDouble, isInclusiveBound(tag[InequalityTag][String](lower)))
+        case lowerEq ~ lowerS => createLowerBound(tag[InequalityTag][String](lowerEq), lowerS.toDouble)
       }
   }
 
@@ -103,23 +113,35 @@ private[parser] class VParser extends JavaTokenParsers {
   private[parser] def matchBoundsInt : Parser[Bounds] = {
     "=" ~ wholeNumber ^^
       {
-        case _ ~ i => EqualTo(i.toInt)
+        case _ ~ i => Eq(i.toInt)
       } |
     upperBoundEquality ~ wholeNumber ~ lowerBoundEquality ~ wholeNumber ^^
       {
-        case upperEq ~ upperS ~ lowerEq ~ lowerS => createGreaterThanLessThanBounds(lowerS.toInt, lowerEq, upperS.toInt, upperEq)
+        case upperEq ~ upperS ~ lowerEq ~ lowerS =>
+          createBetweenBound(
+            lowerS.toInt,
+            tag[InequalityTag][String](lowerEq),
+            upperS.toInt,
+            tag[InequalityTag][String](upperEq)
+          )
       } |
     lowerBoundEquality ~ wholeNumber ~ upperBoundEquality ~ wholeNumber ^^
       {
-        case lowerEq ~ lowerS ~ upperEq ~ upperS => createGreaterThanLessThanBounds(lowerS.toInt, lowerEq, upperS.toInt, upperEq)
+        case lowerEq ~ lowerS ~ upperEq ~ upperS =>
+          createBetweenBound(
+            lowerS.toInt,
+            tag[InequalityTag][String](lowerEq),
+            upperS.toInt,
+            tag[InequalityTag][String](upperEq)
+          )
       } |
     upperBoundEquality ~ wholeNumber ^^
       {
-        case upper ~ upperS => LessThan(upperS.toInt, (isInclusiveBound(tag[InequalityTag][String](upper))))
+        case upperEq ~ upperS => createUpperBound(tag[InequalityTag][String](upperEq), upperS.toInt)
       } |
     lowerBoundEquality ~ wholeNumber ^^
       {
-        case lower ~ lowerS => GreaterThan(lowerS.toInt, isInclusiveBound(tag[InequalityTag][String](lower)))
+        case lowerEq ~ lowerS => createLowerBound(tag[InequalityTag][String](lowerEq), lowerS.toInt)
       }
   }
 }
@@ -143,21 +165,34 @@ object VParser {
 
     def isInclusiveBound(ineq: Inequality) = ineq.contains("=")
 
-    def createGreaterThanLessThanBounds[A](
+    def createLowerBound[A: Numeric](ineq: Inequality, lower: A) = {
+        if (isInclusiveBound(ineq)) {
+          Gte(lower)
+        } else {
+          Gt(lower)
+        }
+      }
+
+    def createUpperBound[A: Numeric](ineq: Inequality, upper: A) = {
+      if (isInclusiveBound(ineq)) {
+        Lte(upper)
+      } else {
+        Lt(upper)
+      }
+    }
+
+    def createBetweenBound[A](
       lower: A,
-      lowerEq: String,
+      lowerEq: Inequality,
       upper: A,
-      upperEq: String
+      upperEq: Inequality
     )(implicit ev: Numeric[A]) = {
       if (ev.lteq(upper, lower)){
         throw new IllegalArgumentException(
-          s"Upper bound: $upper cannot be less than lower bound: $lower"
+          s"Upper bound: $upper cannot be less than or equal to lower bound: $lower"
         )
       }
-      GreaterThanLessThan(
-        (lower, isInclusiveBound(tag[InequalityTag][String](lowerEq))),
-        (upper, isInclusiveBound(tag[InequalityTag][String](upperEq)))
-      )
+      Between(createLowerBound(lowerEq, lower), createUpperBound(upperEq, upper))
     }
   }
 }

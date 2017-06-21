@@ -18,15 +18,7 @@ class ShapelessValidator {
     vo.fields.foldLeft(().validNel[String]){ case (accum, (vk ,vv)) =>
       val out = aMap.get(vk).cata(
         vv.req.validatedNel((), s"Req field named $vk is missing in your case class"),
-        av => (vv, av) match {
-          case (vs: VStr, as: String) => VStr.validate(as, vs)
-          case (_: VBool, _: Boolean) => ().validNel
-          case (vf: VDouble, af: Double) => VDouble.validate(af, vf)
-          case (va: VArr, al: List[_]) => validateArr(al, va)
-          case (vi: VInt, ai: Int) => VInt.validate(ai, vi)
-          case (vo: VObj, cc: Map[String, _] @ unchecked) => _validate(cc, vo)
-          case (v, a) => s"Incompatible or unrecognized type: ${a.getClass().getName()}".invalidNel
-        }
+        av => validateElem(vv, av)
       )
       (accum |@| out).tupled.map(_ => ())
     }
@@ -38,17 +30,19 @@ class ShapelessValidator {
       implicitly[ValidatableBounds[List[_]]].validate(as, _)
     )
     val accumV = as.foldLeft(().validNel[String]){case (accum, a) =>
-      val out = (va.elems, a) match {
-        case (vs: VStr, as: String) => VStr.validate(as, vs)
-        case (_: VBool, _: Boolean) => ().validNel
-        case (vf: VDouble, af: Double) => VDouble.validate(af, vf)
-        case (va: VArr, al: List[_]) => validateArr(al, va)
-        case (vi: VInt, ai: Int) => VInt.validate(ai, vi)
-        case (vo: VObj, cc: Map[String, _] @ unchecked) => _validate(cc, vo)
-        case (v, a) => s"Incompatible or unrecognized type: ${a.getClass().getName()}".invalidNel
-      }
+      val out = validateElem(va.elems, a)
       (accum |@| out).tupled.map(_ => ())
     }
     (accumV |@| lenV).tupled.map(_ => ())
+  }
+
+  @inline private def validateElem(vv: VValue, av: Any) = (vv, av) match {
+    case (vs: VStr, as: String) => VStr.validate(as, vs)
+    case (_: VBool, _: Boolean) => ().validNel
+    case (vf: VDouble, af: Double) => VDouble.validate(af, vf)
+    case (va: VArr, al: List[_]) => validateArr(al, va)
+    case (vi: VInt, ai: Int) => VInt.validate(ai, vi)
+    case (vo: VObj, cc: Map[String, _] @ unchecked) => _validate(cc, vo)
+    case (v, a) => s"Incompatible or unrecognized type: ${a.getClass().getName()}".invalidNel
   }
 }

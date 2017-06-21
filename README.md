@@ -116,13 +116,13 @@ import io.voklim.validen.ast._
  
 VObj(
   Map(
-    "x" -> VStr(Some("(foo|bar){1}.+".r), Some(GreaterThanLessThan((10, false), (20, true))), true),
+    "x" -> VStr(Some("(foo|bar){1}.+".r), Some(Between(Gt(10), Lte(20))), true),
     "d" -> VObj(
       Map(
         "a" -> VBool(false),
         "e" -> VObj(
           Map(
-            "c" -> VStr(None, Some(LessThan(10, false)), true)
+            "c" -> VStr(None, Some(Lt(10)), true)
           ),
           true
         )
@@ -132,21 +132,21 @@ VObj(
     "y" -> VArr(
       VObj(
         Map(
-          "b" -> VInt(Some(EqualTo(3)), true),
+          "b" -> VInt(Some(Eq(3)), true),
           "z" -> VArr(
             VObj(
               Map(
-                "c" -> VDouble(Some((1, 2)), Some(LessThan(5, true)), false)
+                "c" -> VDouble(Some((1, 2)), Some(Lte(5)), false)
               ),
               false
             ),
-            Some(EqualTo(1, false)),
+            Some(Eq(1)),
             false
           )
         ),
         false
       ),
-      Some(LessThan(3, false)),
+      Some(Eq(3)),
       true
     )
   ),

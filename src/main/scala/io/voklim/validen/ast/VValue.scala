@@ -8,11 +8,12 @@ sealed trait VValue extends Requirable
 case class VStr(regex: Option[Regex], len: Option[Bounds], req: Boolean) extends VValue
 case class VInt(bounds: Option[Bounds], req: Boolean) extends VValue
 case class VDouble(shape: Option[VDouble.Shape], bounds: Option[Bounds], req: Boolean) extends VValue
-case class VBool(req: Boolean) extends VValue with Requirable
+case class VBool(req: Boolean) extends VValue
 case class VArr(elems: VValue, len: Option[Bounds], req: Boolean) extends VValue
 case class VObj(fields: Map[String, VValue], req: Boolean) extends VValue
 
 object VStr {
+
   def validate(s: String, vstr: VStr): ValidatedNel[String, Unit] = {
     (vstr.len.cata(
       ().validNel,
@@ -21,7 +22,7 @@ object VStr {
     vstr.regex.cata(
       ().validNel,
       r => r.findFirstIn(s).cata(
-        NonEmptyList.of(s"$r regex did not match $s").invalid,
+        (s"$s did not match regex: $r").invalidNel,
         _ => ().valid
       )
     )).tupled.map(_ => ())
@@ -72,54 +73,70 @@ object VDouble {
 
 object Bounds {
 
-  type Bound[A] = (A, Boolean)
-
+  //TODO
+  /** Numeric is convenient to use here but it ends up polluting
+    * the Bounds ADT and some methods.*/
   def conforms[A: Numeric](i: A, b: Bounds) = b match {
-    case eq: EqualTo[A] @unchecked => EqualTo.conforms(i, eq)
-    case gt: GreaterThan[A] @unchecked => GreaterThan.conforms(i, gt)
-    case lt: LessThan[A] @unchecked => LessThan.conforms(i, lt)
-    case gtlt: GreaterThanLessThan[A] @unchecked =>
-      (
-        GreaterThan.conforms(i, GreaterThan(gtlt.lower)) |@|
-        LessThan.conforms(i, LessThan(gtlt.upper))
-      ).tupled.map(_ => ())
+    case eq: Eq[A] @unchecked => Eq.conforms(i, eq)
+    case gt: Gt[A] @unchecked => Gt.conforms(i, gt)
+    case lt: Lt[A] @unchecked => Lt.conforms(i, lt)
+    case gte: Gte[A] @unchecked => Gte.conforms(i, gte)
+    case lte: Lte[A] @unchecked => Lte.conforms(i, lte)
+    case bt: Between[A] @unchecked => Between.conforms(i, bt)
   }
 }
 
 sealed trait Bounds
-case class EqualTo[A: Numeric](num: A) extends Bounds
+sealed trait Lower[A]
+sealed trait Upper[A]
+case class Eq[A: Numeric](num: A) extends Bounds
+case class Lt[A: Numeric](upper: A) extends Bounds with Upper[A]
+case class Lte[A: Numeric](upper: A) extends Bounds  with Upper[A]
+case class Gt[A: Numeric](lower: A) extends Bounds with Lower[A]
+case class Gte[A: Numeric](lower: A) extends Bounds with Lower[A]
+case class Between[A: Numeric](lower: Lower[A], upper: Upper[A]) extends Bounds
 
-object EqualTo {
-
-  def conforms[A](i: A, b: EqualTo[A])(implicit ev: Numeric[A]) = {
-    (ev.equiv(i, b.num)).validatedNel((), s"$i is not equal to ${b.num}")
-  }
-}
-
-case class GreaterThan[A: Numeric](lower: Bounds.Bound[A]) extends Bounds
-object GreaterThan {
-
-  def conforms[A](i: A, b: GreaterThan[A])(implicit ev: Numeric[A]) = {
-    val (l, inc) = b.lower
-    if (inc){
-      (ev.gteq(i, l)).validatedNel((), s"$i is not greater than or equal to $l")
-    } else {
-      (ev.gt(i, l)).validatedNel((), s"$i is not greater than $l")
+object Between {
+  def conforms[A](i: A, bt: Between[A])(implicit ev: Numeric[A]) = {
+    bt match {
+      case Between(gt: Gt[A], lt: Lt[A]) =>
+        (Gt.conforms(i, gt) |@| Lt.conforms(i, lt)).tupled.map(_ => ())
+      case Between(gte: Gte[A], lt: Lt[A]) =>
+        (Gte.conforms(i, gte) |@| Lt.conforms(i, lt)).tupled.map(_ => ())
+      case Between(gt: Gt[A], lte: Lte[A]) =>
+        (Gt.conforms(i, gt) |@| Lte.conforms(i, lte)).tupled.map(_ => ())
+      case Between(gte: Gte[A], lte: Lte[A]) =>
+        (Gte.conforms(i, gte) |@| Lte.conforms(i, lte)).tupled.map(_ => ())
     }
   }
 }
 
-case class LessThan[A: Numeric](upper: Bounds.Bound[A]) extends Bounds
-
-object LessThan {
-  def conforms[A](i: A, b: LessThan[A])(implicit ev: Numeric[A]) = {
-    val (u, inc) = b.upper
-    if (inc) {
-      (ev.lteq(i, u)).validatedNel((), s"$i is not less than or equal to $u")
-    } else {
-      (ev.lt(i, u)).validatedNel((), s"$i is not less than $u")
-    }
+object Eq {
+  def conforms[A](i: A, e: Eq[A])(implicit ev: Numeric[A]) = {
+    ev.equiv(i, e.num).validatedNel((), s"$i is not equal to ${e.num}")
   }
 }
 
-case class GreaterThanLessThan[A: Numeric](lower: Bounds.Bound[A], upper: Bounds.Bound[A]) extends Bounds
+object Lt {
+  def conforms[A](i: A, u: Lt[A])(implicit ev: Numeric[A]) = {
+    ev.lt(i, u.upper).validatedNel((), s"$i is not less than $u")
+  }
+}
+
+object Lte {
+  def conforms[A](i: A, u: Lte[A])(implicit ev: Numeric[A]) = {
+    ev.lteq(i, u.upper).validatedNel((), s"$i is not less than or equal to $u")
+  }
+}
+
+object Gt {
+  def conforms[A](i: A, l: Gt[A])(implicit ev: Numeric[A]) = {
+    ev.gt(i, l.lower).validatedNel((), s"$i is not greater than ${l.lower}"
+  }
+}
+
+object Gte {
+  def conforms[A](i: A, l: Gte[A])(implicit ev: Numeric[A]) = {
+    ev.gteq(i, l.lower).validatedNel((), s"$i is not greater than or equal to ${l.lower}")
+  }
+}
