@@ -9,8 +9,8 @@ package object ast {
   val primitiveValidatorAst = VObj(
     Map(
       "str" -> vStrAst,
-      "int" -> VInt(Some(Between(Gte(10), Lt(20))), true),
-      "float" -> VDouble(Some((2, 2)), Some(Gt(2.0)), true),
+      "int" -> VInt(Some(Btw(Gte(10), Lt(20))), true),
+      "float" -> VDbl(Some((2, 2)), Some(Gt(2.0)), true),
       "bool" -> VBool(false)
     ),
     true

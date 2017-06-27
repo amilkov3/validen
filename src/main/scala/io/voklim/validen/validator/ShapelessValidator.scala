@@ -39,7 +39,7 @@ class ShapelessValidator {
   @inline private def validateElem(vv: VValue, av: Any) = (vv, av) match {
     case (vs: VStr, as: String) => VStr.validate(as, vs)
     case (_: VBool, _: Boolean) => ().validNel
-    case (vf: VDouble, af: Double) => VDouble.validate(af, vf)
+    case (vf: VDbl, af: Double) => VDbl.validate(af, vf)
     case (va: VArr, al: List[_]) => validateArr(al, va)
     case (vi: VInt, ai: Int) => VInt.validate(ai, vi)
     case (vo: VObj, cc: Map[String, _] @ unchecked) => _validate(cc, vo)

@@ -41,8 +41,8 @@ private[parser] class VParser extends JavaTokenParsers {
       { case typeStr ~ rOpt ~ bOpt  => VStr(rOpt, bOpt, isRequired(tag[ReqTag][String](typeStr))) }
 
     /** Double validator (with presence, shape and bounds validation) */
-    def double: Parser[VDouble] = "double(!{0,1})".r ~ opt(doubleShape) ~ opt(matchBoundsDouble) ^^
-      { case typeStr ~ shOpt ~ bOpt => VDouble(shOpt, bOpt, isRequired(tag[ReqTag][String](typeStr))) }
+    def double: Parser[VDbl] = "double(!{0,1})".r ~ opt(doubleShape) ~ opt(matchBoundsDouble) ^^
+      { case typeStr ~ shOpt ~ bOpt => VDbl(shOpt, bOpt, isRequired(tag[ReqTag][String](typeStr))) }
 
     /** Int validator (with bounds validation) */
     def int: Parser[VInt] = "int(!{0,1})".r ~ opt(matchBoundsInt) ^^
@@ -63,7 +63,7 @@ private[parser] class VParser extends JavaTokenParsers {
   private[parser] def dequotedStringLiteral = stringLiteral ^^ {case str => str.substring(1, str.length - 1)}
 
   /** Spec for how many places there should be to the right and left of the decimal point */
-  private[parser] def doubleShape: Parser[VDouble.Shape] = "[1-9]{1}_[1-9]{1}".r ^^
+  private[parser] def doubleShape: Parser[VDbl.Shape] = "[1-9]{1}_[1-9]{1}".r ^^
     {
       case shapeStr =>
         val shapeArr = shapeStr.split("_")
@@ -192,7 +192,7 @@ object VParser {
           s"Upper bound: $upper cannot be less than or equal to lower bound: $lower"
         )
       }
-      Between(createLowerBound(lowerEq, lower), createUpperBound(upperEq, upper))
+      Btw(createLowerBound(lowerEq, lower), createUpperBound(upperEq, upper))
     }
   }
 }

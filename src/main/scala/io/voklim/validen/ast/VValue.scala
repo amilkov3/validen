@@ -7,7 +7,7 @@ trait Requirable { def req: Boolean }
 sealed trait VValue extends Requirable
 case class VStr(regex: Option[Regex], len: Option[Bounds], req: Boolean) extends VValue
 case class VInt(bounds: Option[Bounds], req: Boolean) extends VValue
-case class VDouble(shape: Option[VDouble.Shape], bounds: Option[Bounds], req: Boolean) extends VValue
+case class VDbl(shape: Option[VDbl.Shape], bounds: Option[Bounds], req: Boolean) extends VValue
 case class VBool(req: Boolean) extends VValue
 case class VArr(elems: VValue, len: Option[Bounds], req: Boolean) extends VValue
 case class VObj(fields: Map[String, VValue], req: Boolean) extends VValue
@@ -47,7 +47,7 @@ object VArr {
   }
 }
 
-object VDouble {
+object VDbl {
   type Shape = (Int, Int)
 
   def conforms(d: Double, sh: Shape) = {
@@ -59,7 +59,7 @@ object VDouble {
     ).tupled.map(_ => ())
   }
 
-  def validate(d: Double, vfl: VDouble) = {
+  def validate(d: Double, vfl: VDbl) = {
     (vfl.bounds.cata(
       ().validNel,
       d.validateBounds(_)
@@ -82,7 +82,7 @@ object Bounds {
     case lt: Lt[A] @unchecked => Lt.conforms(i, lt)
     case gte: Gte[A] @unchecked => Gte.conforms(i, gte)
     case lte: Lte[A] @unchecked => Lte.conforms(i, lte)
-    case bt: Between[A] @unchecked => Between.conforms(i, bt)
+    case bt: Btw[A] @unchecked => Btw.conforms(i, bt)
   }
 }
 
@@ -94,18 +94,18 @@ case class Lt[A: Numeric](upper: A) extends Bounds with Upper[A]
 case class Lte[A: Numeric](upper: A) extends Bounds  with Upper[A]
 case class Gt[A: Numeric](lower: A) extends Bounds with Lower[A]
 case class Gte[A: Numeric](lower: A) extends Bounds with Lower[A]
-case class Between[A: Numeric](lower: Lower[A], upper: Upper[A]) extends Bounds
+case class Btw[A: Numeric](lower: Lower[A], upper: Upper[A]) extends Bounds
 
-object Between {
-  def conforms[A](i: A, bt: Between[A])(implicit ev: Numeric[A]) = {
+object Btw {
+  def conforms[A](i: A, bt: Btw[A])(implicit ev: Numeric[A]) = {
     bt match {
-      case Between(gt: Gt[A], lt: Lt[A]) =>
+      case Btw(gt: Gt[A], lt: Lt[A]) =>
         (Gt.conforms(i, gt) |@| Lt.conforms(i, lt)).tupled.map(_ => ())
-      case Between(gte: Gte[A], lt: Lt[A]) =>
+      case Btw(gte: Gte[A], lt: Lt[A]) =>
         (Gte.conforms(i, gte) |@| Lt.conforms(i, lt)).tupled.map(_ => ())
-      case Between(gt: Gt[A], lte: Lte[A]) =>
+      case Btw(gt: Gt[A], lte: Lte[A]) =>
         (Gt.conforms(i, gt) |@| Lte.conforms(i, lte)).tupled.map(_ => ())
-      case Between(gte: Gte[A], lte: Lte[A]) =>
+      case Btw(gte: Gte[A], lte: Lte[A]) =>
         (Gte.conforms(i, gte) |@| Lte.conforms(i, lte)).tupled.map(_ => ())
     }
   }

@@ -116,7 +116,7 @@ import io.voklim.validen.ast._
  
 VObj(
   Map(
-    "x" -> VStr(Some("(foo|bar){1}.+".r), Some(Between(Gt(10), Lte(20))), true),
+    "x" -> VStr(Some("(foo|bar){1}.+".r), Some(Btw(Gt(10), Lte(20))), true),
     "d" -> VObj(
       Map(
         "a" -> VBool(false),
@@ -136,7 +136,7 @@ VObj(
           "z" -> VArr(
             VObj(
               Map(
-                "c" -> VDouble(Some((1, 2)), Some(Lte(5)), false)
+                "c" -> VDbl(Some((1, 2)), Some(Lte(5)), false)
               ),
               false
             ),
