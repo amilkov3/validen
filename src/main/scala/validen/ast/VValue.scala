@@ -1,7 +1,7 @@
-package io.voklim.validen.ast
+package validen.ast
 
 import scala.util.matching.Regex
-import io.voklim.internal.common._
+import internal.common._
 
 trait Requirable { def req: Boolean }
 sealed trait VValue extends Requirable

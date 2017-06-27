@@ -1,4 +1,4 @@
-package io.voklim.internal.common
+package internal.common
 
 import scala.util.matching.Regex
 

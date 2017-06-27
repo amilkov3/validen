@@ -64,7 +64,7 @@ validate your case class against it
 
 ```scala
 
-import io.voklim.validen._
+import validen._
 
 case class Baz(c: Double)
 case class Quux(a: Boolean, e: Baz)
@@ -112,7 +112,7 @@ Here's what the parsed AST looks like:
 
 ```scala
  
-import io.voklim.validen.ast._
+import validen.ast._
  
 VObj(
   Map(

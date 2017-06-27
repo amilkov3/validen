@@ -1,6 +1,6 @@
-package io.voklim.internal
+package internal
 
-import io.voklim.validen.ast.ValidatableImports
+import validen.ast.ValidatableImports
 
 package object common extends {}
   with CategoryImports

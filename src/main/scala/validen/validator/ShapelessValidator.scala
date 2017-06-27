@@ -1,8 +1,8 @@
-package io.voklim.validen.validator
+package validen.validator
 
-import io.voklim.validen.ast._
+import validen.ast._
 import shapeless._
-import io.voklim.internal.common._
+import internal.common._
 
 class ShapelessValidator {
 

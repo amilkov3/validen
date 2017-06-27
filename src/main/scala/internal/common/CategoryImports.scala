@@ -1,5 +1,4 @@
-package io.voklim.internal.common
-
+package internal.common
 
 trait CategoryImports extends {}
   with cats.syntax.EitherSyntax

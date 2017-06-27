@@ -1,4 +1,4 @@
-package io.voklim.internal.common
+package internal.common
 
 import shapeless._
 import shapeless.labelled.FieldType
@@ -21,7 +21,7 @@ object ToNestedMap extends LowPriorityToNestedMap {
   }
 
   /* TODO:
-  The common parent between Vector and List is Seq which doesn't have a map
+  The internal.common parent between Vector and List is Seq which doesn't have a map
   which is why both implicit constructors present */
   implicit def hconsToMapNestedVector[K <: Symbol, V, R <: HList, T <: HList](implicit
     wit: Witness.Aux[K],

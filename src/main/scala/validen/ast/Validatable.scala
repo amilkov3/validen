@@ -1,6 +1,6 @@
-package io.voklim.validen.ast
+package validen.ast
 
-import io.voklim.internal.common._
+import internal.common._
 
 trait ValidatableImports {
 

@@ -1,11 +1,11 @@
-package io.voklim.validen.parser
+package validen.parser
 
-import io.voklim.validen.ast._
+import validen.ast._
 
 import scala.util.parsing.combinator._
 import shapeless.tag
 import shapeless.tag._
-import io.voklim.internal.common._
+import internal.common._
 
 import scala.util.matching.Regex
 

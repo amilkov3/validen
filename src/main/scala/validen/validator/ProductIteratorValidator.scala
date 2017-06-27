@@ -1,7 +1,7 @@
-package io.voklim.validen.validator
+package validen.validator
 
-import io.voklim.internal.common._
-import io.voklim.validen.ast._
+import internal.common._
+import validen.ast._
 
 class ProductIteratorValidator {
 

@@ -1,9 +1,9 @@
-package io.voklim.validen.parser
+package validen.parser
 
 import io.voklim.test._
-import io.voklim.validen.ast._
+import validen.ast._
 import io.voklim.test.ast._
-import io.voklim.internal.common._
+import internal.common._
 
 class VParserTest extends UnitPropertySpec {
 

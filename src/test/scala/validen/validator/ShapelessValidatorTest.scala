@@ -1,4 +1,4 @@
-package io.voklim.validen.validator
+package validen.validator
 
 import io.voklim.test._
 import io.voklim.test.ast._

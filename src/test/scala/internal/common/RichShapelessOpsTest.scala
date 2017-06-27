@@ -1,4 +1,4 @@
-package io.voklim.internal.common
+package internal.common
 
 import io.voklim.test._
 

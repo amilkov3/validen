@@ -1,6 +1,6 @@
 package io.voklim.test
 
-import io.voklim.validen.ast._
+import validen.ast._
 
 package object ast {
 
