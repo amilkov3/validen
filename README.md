@@ -1,4 +1,6 @@
 
+## Sunset. Leaving this up as a reminder to myself about a time when I knew less...in general haha. FP is a process
+
 ##### This project is not operational yet but it's getting close to a 1.0
 
 ## Validen
